@@ -14,7 +14,10 @@ pub struct PageParams {
 
 impl Default for PageParams {
     fn default() -> Self {
-        Self { limit: 25, after: None }
+        Self {
+            limit: 25,
+            after: None,
+        }
     }
 }
 

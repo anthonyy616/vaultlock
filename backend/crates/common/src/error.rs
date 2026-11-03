@@ -5,7 +5,7 @@
 
 use std::fmt;
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 /// Application error type shared across the backend.
 ///
@@ -80,9 +80,7 @@ impl AppError {
             AppError::Conflict { message, .. } => message.clone(),
             AppError::Precondition { message } => message.clone(),
             AppError::TooLarge { message } => message.clone(),
-            AppError::RateLimited { .. } => {
-                "Too many requests. Please retry later.".to_string()
-            }
+            AppError::RateLimited { .. } => "Too many requests. Please retry later.".to_string(),
             AppError::Internal => {
                 "An unexpected error occurred. The incident has been logged.".to_string()
             }
@@ -102,13 +100,19 @@ impl AppError {
     /// Convenience constructors used across the backend.
     #[must_use]
     pub fn validation(field: &str, message: &str) -> Self {
-        AppError::Validation { field: field.to_string(), message: message.to_string() }
+        AppError::Validation {
+            field: field.to_string(),
+            message: message.to_string(),
+        }
     }
 
     /// Conflict error with a stable reason code.
     #[must_use]
     pub fn conflict(code: &str, message: &str) -> Self {
-        AppError::Conflict { code: code.to_string(), message: message.to_string() }
+        AppError::Conflict {
+            code: code.to_string(),
+            message: message.to_string(),
+        }
     }
 }
 

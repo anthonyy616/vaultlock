@@ -13,6 +13,6 @@ pub mod validation;
 
 pub use config::{AppConfig, DatabaseConfig, IdentityConfig, KmsConfig, StorageConfig};
 pub use error::AppError;
-pub use ids::{new_id, Id};
+pub use ids::{Id, new_id};
 pub use pagination::{Page, PageParams};
 pub use validation::validate_identifier_path;

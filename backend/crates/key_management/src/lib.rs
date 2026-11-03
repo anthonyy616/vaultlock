@@ -105,7 +105,11 @@ impl LocalKms {
     /// rotate the master key and re-wrap domain keys).
     #[must_use]
     pub fn new(pool: PgPool, master: [u8; 32], master_version: u32) -> Self {
-        Self { pool, master, master_version }
+        Self {
+            pool,
+            master,
+            master_version,
+        }
     }
 
     async fn load_wrapped(&self, key_id: KeyId) -> AppResult<KeyRecord> {
@@ -163,7 +167,8 @@ impl Kms for LocalKms {
         ctx: &vaultlock_audit::AuditContext,
     ) -> AppResult<KeyRecord> {
         let old = self.load_wrapped(key_id).await?;
-        let kek_old = master_cipher_key(&self.master, u32::try_from(old.master_version).unwrap_or(1));
+        let kek_old =
+            master_cipher_key(&self.master, u32::try_from(old.master_version).unwrap_or(1));
         let dek = vaultlock_encryption::unwrap_key(&kek_old, key_id.as_bytes(), &old.wrapped_key)?;
         let new_id = Uuid::now_v7();
         let kek_new = master_cipher_key(&self.master, self.master_version);
@@ -243,8 +248,14 @@ mod tests {
             .unwrap_or_else(|e| panic!("schema: {e}"));
         let master: [u8; 32] = [7u8; 32];
         let kms = LocalKms::new(pool, master, 1);
-        let (record, dek) = kms.create_key(&AuditContext::default()).await.unwrap_or_else(|e| panic!("create: {e}"));
-        let unwrapped = kms.unwrap_dek(record.key_id).await.unwrap_or_else(|e| panic!("unwrap: {e}"));
+        let (record, dek) = kms
+            .create_key(&AuditContext::default())
+            .await
+            .unwrap_or_else(|e| panic!("create: {e}"));
+        let unwrapped = kms
+            .unwrap_dek(record.key_id)
+            .await
+            .unwrap_or_else(|e| panic!("unwrap: {e}"));
         assert_eq!(unwrapped.expose(), dek.expose());
         assert!(kms.unwrap_dek(Uuid::now_v7()).await.is_err());
     }
@@ -261,13 +272,25 @@ mod tests {
             .unwrap_or_else(|e| panic!("schema: {e}"));
         let master: [u8; 32] = [9u8; 32];
         let kms = LocalKms::new(pool, master, 1);
-        let (record, dek) = kms.create_key(&AuditContext::default()).await.unwrap_or_else(|e| panic!("create: {e}"));
-        let rotated = kms.rotate_key(record.key_id, &AuditContext::default()).await.unwrap_or_else(|e| panic!("rotate: {e}"));
+        let (record, dek) = kms
+            .create_key(&AuditContext::default())
+            .await
+            .unwrap_or_else(|e| panic!("create: {e}"));
+        let rotated = kms
+            .rotate_key(record.key_id, &AuditContext::default())
+            .await
+            .unwrap_or_else(|e| panic!("rotate: {e}"));
         assert_eq!(rotated.rotated_from, Some(record.key_id));
         assert_ne!(rotated.key_id, record.key_id);
         // Both old and new ids unwrap to the same DEK.
-        let old_dek = kms.unwrap_dek(record.key_id).await.unwrap_or_else(|e| panic!("old unwrap: {e}"));
-        let new_dek = kms.unwrap_dek(rotated.key_id).await.unwrap_or_else(|e| panic!("new unwrap: {e}"));
+        let old_dek = kms
+            .unwrap_dek(record.key_id)
+            .await
+            .unwrap_or_else(|e| panic!("old unwrap: {e}"));
+        let new_dek = kms
+            .unwrap_dek(rotated.key_id)
+            .await
+            .unwrap_or_else(|e| panic!("new unwrap: {e}"));
         assert_eq!(old_dek.expose(), dek.expose());
         assert_eq!(new_dek.expose(), dek.expose());
     }

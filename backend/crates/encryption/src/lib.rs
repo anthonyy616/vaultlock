@@ -12,10 +12,10 @@
 //! it is never advertised as zero-knowledge or end-to-end encryption.
 
 use aes_gcm::aead::Aead;
-use aes_gcm::{Aes256Gcm, KeyInit, Key, Nonce};
+use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce};
 
-use rand_core::OsRng;
 use rand::RngCore;
+use rand_core::OsRng;
 use zeroize::Zeroize;
 
 use vaultlock_common::error::{AppError, AppResult};
@@ -41,10 +41,13 @@ pub fn encrypt(dek: &[u8; DEK_LEN], aad: &[u8], plaintext: &[u8]) -> AppResult<V
     let mut nonce_bytes = [0u8; NONCE_LEN];
     OsRng.fill_bytes(&mut nonce_bytes);
     let ciphertext = cipher
-        .encrypt(Nonce::from_slice(&nonce_bytes), aes_gcm::aead::Payload {
-            msg: plaintext,
-            aad,
-        })
+        .encrypt(
+            Nonce::from_slice(&nonce_bytes),
+            aes_gcm::aead::Payload {
+                msg: plaintext,
+                aad,
+            },
+        )
         .map_err(|_| AppError::Internal)?;
     let mut out = Vec::with_capacity(NONCE_LEN + ciphertext.len());
     out.extend_from_slice(&nonce_bytes);
@@ -64,10 +67,13 @@ pub fn decrypt(dek: &[u8; DEK_LEN], aad: &[u8], payload: &[u8]) -> AppResult<Vec
     let (nonce_bytes, ciphertext) = payload.split_at(NONCE_LEN);
     let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(dek));
     cipher
-        .decrypt(Nonce::from_slice(nonce_bytes), aes_gcm::aead::Payload {
-            msg: ciphertext,
-            aad,
-        })
+        .decrypt(
+            Nonce::from_slice(nonce_bytes),
+            aes_gcm::aead::Payload {
+                msg: ciphertext,
+                aad,
+            },
+        )
         .map_err(|_| AppError::Internal)
 }
 
@@ -98,9 +104,7 @@ pub fn unwrap_key(kek: &[u8; DEK_LEN], key_id: &[u8], wrapped: &[u8]) -> AppResu
     let plaintext = decrypt(kek, key_id, wrapped)?;
     plaintext
         .try_into()
-        .map_err(|_| {
-            AppError::Internal
-        })
+        .map_err(|_| AppError::Internal)
         .map(ZeroizingDek)
 }
 
@@ -144,9 +148,8 @@ impl std::fmt::Debug for ZeroizingDek {
 #[must_use]
 pub fn fingerprint(key: &[u8; DEK_LEN], data: &[u8]) -> [u8; FINGERPRINT_LEN] {
     use hmac::Mac;
-    let mut mac =
-        <hmac::Hmac<sha2::Sha256> as Mac>::new_from_slice(key)
-            .unwrap_or_else(|_| unreachable!("HMAC accepts any key length"));
+    let mut mac = <hmac::Hmac<sha2::Sha256> as Mac>::new_from_slice(key)
+        .unwrap_or_else(|_| unreachable!("HMAC accepts any key length"));
     mac.update(data);
     mac.finalize().into_bytes().into()
 }
@@ -174,7 +177,10 @@ mod tests {
         let payload = encrypt(&dek, aad, b"DATABASE_URL=postgres://example").unwrap_or_default();
         let decrypt_yes = decrypt(&dek, aad, &payload);
         assert!(decrypt_yes.is_ok());
-        assert_eq!(decrypt_yes.unwrap_or_default(), b"DATABASE_URL=postgres://example");
+        assert_eq!(
+            decrypt_yes.unwrap_or_default(),
+            b"DATABASE_URL=postgres://example"
+        );
 
         let mut tampered = payload.clone();
         tampered[NONCE_LEN + 1] ^= 0x01;

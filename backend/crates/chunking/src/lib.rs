@@ -32,14 +32,22 @@ pub fn chunk_ranges(data: &[u8]) -> Vec<ChunkRange> {
 
 /// Split `data` using explicit bounds (used by tests and fuzz-like properties).
 #[must_use]
-pub fn chunk_ranges_with_bounds(data: &[u8], min: usize, avg: usize, max: usize) -> Vec<ChunkRange> {
+pub fn chunk_ranges_with_bounds(
+    data: &[u8],
+    min: usize,
+    avg: usize,
+    max: usize,
+) -> Vec<ChunkRange> {
     debug_assert!(min <= avg && avg <= max);
     let mut ranges = Vec::new();
     let mut offset = 0usize;
     while offset < data.len() {
         let remaining = data.len() - offset;
         if remaining <= min {
-            ranges.push(ChunkRange { offset, len: remaining });
+            ranges.push(ChunkRange {
+                offset,
+                len: remaining,
+            });
             break;
         }
         let end = find_boundary(data, offset, min, avg, max);
@@ -83,14 +91,24 @@ fn find_boundary(data: &[u8], start: usize, min: usize, avg: usize, max: usize) 
         hash = (hash << 1).wrapping_add(gear_table()[*byte as usize]);
     }
     // Fast CDC normal mask until avg target.
-    for (i, byte) in data.iter().enumerate().skip(warm_end).take(normal_stop.saturating_sub(warm_end)) {
+    for (i, byte) in data
+        .iter()
+        .enumerate()
+        .skip(warm_end)
+        .take(normal_stop.saturating_sub(warm_end))
+    {
         hash = (hash << 1).wrapping_add(gear_table()[*byte as usize]);
         if hash & NORMAL_MASK == 0 {
             return i + 1;
         }
     }
     // Sparser mask until the hard maximum.
-    for (i, byte) in data.iter().enumerate().skip(normal_stop).take(hard_stop.saturating_sub(normal_stop)) {
+    for (i, byte) in data
+        .iter()
+        .enumerate()
+        .skip(normal_stop)
+        .take(hard_stop.saturating_sub(normal_stop))
+    {
         hash = (hash << 1).wrapping_add(gear_table()[*byte as usize]);
         if hash & HARD_MASK == 0 {
             return i + 1;
@@ -139,7 +157,9 @@ mod tests {
 
     #[test]
     fn deterministic_across_calls() {
-        let data: Vec<u8> = (0..800_000u32).map(|i| ((i * 31) ^ (i >> 5)) as u8).collect();
+        let data: Vec<u8> = (0..800_000u32)
+            .map(|i| ((i * 31) ^ (i >> 5)) as u8)
+            .collect();
         let a = chunk_ranges(&data);
         let b = chunk_ranges(&data);
         assert_eq!(a, b);

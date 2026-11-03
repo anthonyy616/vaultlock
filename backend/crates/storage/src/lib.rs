@@ -76,8 +76,7 @@ impl LocalFsStore {
     fn path_for(&self, key: &str) -> AppResult<std::path::PathBuf> {
         validate_key(key)?;
         // Refuse any key that could escape the root once component-walked.
-        let rel: std::path::PathBuf =
-            key.split('/').collect::<std::path::PathBuf>();
+        let rel: std::path::PathBuf = key.split('/').collect::<std::path::PathBuf>();
         let full = self.root.join(rel);
         let canon_root = self
             .root
@@ -88,10 +87,12 @@ impl LocalFsStore {
             .map(std::path::Path::to_path_buf)
             .unwrap_or_else(|| self.root.clone());
         let _ = parent.clone();
-        let canonical_parent =
-            parent.canonicalize().unwrap_or_else(|_| self.root.clone());
+        let canonical_parent = parent.canonicalize().unwrap_or_else(|_| self.root.clone());
         if !canonical_parent.starts_with(&canon_root) {
-            return Err(AppError::validation("key", "object key escapes storage root"));
+            return Err(AppError::validation(
+                "key",
+                "object key escapes storage root",
+            ));
         }
         Ok(full)
     }
@@ -107,12 +108,10 @@ impl ObjectStore for LocalFsStore {
         }
         let path = self.path_for(key)?;
         if let Some(parent) = path.parent() {
-            tokio::fs::create_dir_all(parent)
-                .await
-                .map_err(|e| {
-                    tracing::error!(error = %e, "failed to create storage dir");
-                    AppError::Internal
-                })?;
+            tokio::fs::create_dir_all(parent).await.map_err(|e| {
+                tracing::error!(error = %e, "failed to create storage dir");
+                AppError::Internal
+            })?;
         }
         // Write-then-rename for crash-safe writes.
         let tmp = path.with_extension("tmp-w");
@@ -192,15 +191,14 @@ impl S3Store {
             .build();
         let client = aws_sdk_s3::Client::from_conf(conf);
         // Validate reachability and bucket existence with a cheap head request.
-        let head = client
-            .head_bucket()
-            .bucket(bucket)
-            .send()
-            .await;
+        let head = client.head_bucket().bucket(bucket).send().await;
         if let Err(err) = head {
             tracing::warn!(error = %err, bucket, endpoint, "bucket head request failed (may be created on first write)");
         }
-        Ok(Self { client, bucket: bucket.to_string() })
+        Ok(Self {
+            client,
+            bucket: bucket.to_string(),
+        })
     }
 
     /// Create from a [`vaultlock_common::config::StorageConfig`] S3 variant.
@@ -219,8 +217,15 @@ impl S3Store {
                 secret_access_key,
                 force_path_style,
             } => Ok(Some(
-                Self::new(endpoint, region, bucket, access_key_id, secret_access_key, *force_path_style)
-                    .await?,
+                Self::new(
+                    endpoint,
+                    region,
+                    bucket,
+                    access_key_id,
+                    secret_access_key,
+                    *force_path_style,
+                )
+                .await?,
             )),
             vaultlock_common::config::StorageConfig::Local { .. } => Ok(None),
         }
@@ -301,10 +306,18 @@ impl ObjectStore for S3Store {
 
     async fn exists(&self, key: &str) -> AppResult<bool> {
         validate_key(key)?;
-        match self.client.head_object().bucket(&self.bucket).key(key).send().await {
+        match self
+            .client
+            .head_object()
+            .bucket(&self.bucket)
+            .key(key)
+            .send()
+            .await
+        {
             Ok(_) => Ok(true),
             Err(e) => {
-                let svc_err = e.raw_response().is_some() && e.raw_response().is_some_and(|r| r.status().as_u16() == 404);
+                let svc_err = e.raw_response().is_some()
+                    && e.raw_response().is_some_and(|r| r.status().as_u16() == 404);
                 if svc_err {
                     Ok(false)
                 } else {
@@ -335,14 +348,26 @@ pub async fn build_store(
             secret_access_key,
             force_path_style,
         } => Ok(Box::new(
-            S3Store::new(endpoint, region, bucket, access_key_id, secret_access_key, *force_path_style)
-                .await?,
+            S3Store::new(
+                endpoint,
+                region,
+                bucket,
+                access_key_id,
+                secret_access_key,
+                *force_path_style,
+            )
+            .await?,
         )),
     }
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unnecessary_lazy_evaluations)]
+#[allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    clippy::unnecessary_lazy_evaluations
+)]
 mod tests {
     use super::*;
 
@@ -351,19 +376,46 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("vl-store-{}", uuid::Uuid::now_v7()));
         let store = LocalFsStore::new(&dir);
         let size = store
-            .put("blobs/abcd/0011.feature", Bytes::from_static(b"content-here"), 1000)
+            .put(
+                "blobs/abcd/0011.feature",
+                Bytes::from_static(b"content-here"),
+                1000,
+            )
             .await
             .unwrap_or_else(|_| panic!("put"));
         assert_eq!(size, 12);
-        assert!(store.exists("blobs/abcd/0011.feature").await.unwrap_or_else(|_| false));
+        assert!(
+            store
+                .exists("blobs/abcd/0011.feature")
+                .await
+                .unwrap_or_else(|_| false)
+        );
         assert_eq!(
-            store.get("blobs/abcd/0011.feature").await.unwrap_or_else(|e| panic!("{e}")).as_ref(),
+            store
+                .get("blobs/abcd/0011.feature")
+                .await
+                .unwrap_or_else(|e| panic!("{e}"))
+                .as_ref(),
             b"content-here"
         );
-        assert!(matches!(store.get("blobs/abcd/9999").await, Err(AppError::NotFound)));
-        store.delete("blobs/abcd/0011.feature").await.unwrap_or_else(|e| panic!("{e}"));
-        assert!(!store.exists("blobs/abcd/0011.feature").await.unwrap_or_else(|_| true));
-        store.delete("blobs/abcd/0011.feature").await.unwrap_or_else(|e| panic!("{e}")); // idempotent
+        assert!(matches!(
+            store.get("blobs/abcd/9999").await,
+            Err(AppError::NotFound)
+        ));
+        store
+            .delete("blobs/abcd/0011.feature")
+            .await
+            .unwrap_or_else(|e| panic!("{e}"));
+        assert!(
+            !store
+                .exists("blobs/abcd/0011.feature")
+                .await
+                .unwrap_or_else(|_| true)
+        );
+        store
+            .delete("blobs/abcd/0011.feature")
+            .await
+            .unwrap_or_else(|e| panic!("{e}")); // idempotent
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -371,9 +423,19 @@ mod tests {
     async fn local_store_rejects_unsafe_keys() {
         let dir = std::env::temp_dir().join(format!("vl-store-{}", uuid::Uuid::now_v7()));
         let store = LocalFsStore::new(&dir);
-        assert!(store.put("../escape", Bytes::from_static(b"x"), 1000).await.is_err());
+        assert!(
+            store
+                .put("../escape", Bytes::from_static(b"x"), 1000)
+                .await
+                .is_err()
+        );
         assert!(store.get("/abs").await.is_err());
-        assert!(store.put("blobs//nested", Bytes::from_static(b"x"), 1000).await.is_err());
+        assert!(
+            store
+                .put("blobs//nested", Bytes::from_static(b"x"), 1000)
+                .await
+                .is_err()
+        );
         let _ = std::fs::remove_dir_all(&dir);
     }
 

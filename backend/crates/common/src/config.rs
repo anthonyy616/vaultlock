@@ -101,16 +101,15 @@ impl AppConfig {
     /// setting so operators can fix the environment before start-up.
     pub fn from_env() -> AppResult<Self> {
         let database_url = getenv_req("DATABASE_URL")?;
-        let bind = getenv_opt("VL_BIND_ADDR")
-            .unwrap_or_else(|| "0.0.0.0:8080".to_string());
+        let bind = getenv_opt("VL_BIND_ADDR").unwrap_or_else(|| "0.0.0.0:8080".to_string());
         let bind = bind
             .parse::<SocketAddr>()
             .map_err(|_| AppError::validation("VL_BIND_ADDR", "invalid socket address"))?;
-        let public_url = getenv_opt("VL_PUBLIC_URL")
-            .unwrap_or_else(|| format!("http://{bind}"));
-        let web_origin = getenv_opt("VL_WEB_ORIGIN")
-            .unwrap_or_else(|| "http://localhost:3000".to_string());
-        let email_link_base = getenv_opt("VL_EMAIL_LINK_BASE").unwrap_or_else(|| public_url.clone());
+        let public_url = getenv_opt("VL_PUBLIC_URL").unwrap_or_else(|| format!("http://{bind}"));
+        let web_origin =
+            getenv_opt("VL_WEB_ORIGIN").unwrap_or_else(|| "http://localhost:3000".to_string());
+        let email_link_base =
+            getenv_opt("VL_EMAIL_LINK_BASE").unwrap_or_else(|| public_url.clone());
         let storage = load_storage()?;
         let kms = load_kms()?;
         let identity = load_identity()?;
@@ -118,7 +117,9 @@ impl AppConfig {
             .map(trim_leading)
             .unwrap_or_else(|| "107374182400".to_string()) // 100 GiB default cap
             .parse::<u64>()
-            .map_err(|_| AppError::validation("VL_MAX_OBJECT_SIZE", "must be an integer byte count"))?;
+            .map_err(|_| {
+                AppError::validation("VL_MAX_OBJECT_SIZE", "must be an integer byte count")
+            })?;
         let job_interval_secs: u64 = getenv_opt("VL_JOB_INTERVAL_SECS")
             .map(trim_leading)
             .unwrap_or_else(|| "60".to_string())
@@ -150,25 +151,37 @@ fn trim_leading(mut v: String) -> String {
 fn getenv_req(key: &str) -> AppResult<String> {
     match env::var(key) {
         Ok(v) if !v.trim().is_empty() => Ok(v.trim().to_string()),
-        _ => Err(AppError::validation(key, "required environment variable is not set")),
+        _ => Err(AppError::validation(
+            key,
+            "required environment variable is not set",
+        )),
     }
 }
 
 fn getenv_opt(key: &str) -> Option<String> {
-    env::var(key).ok().map(|v| v.trim().to_string()).filter(|v| !v.is_empty())
+    env::var(key)
+        .ok()
+        .map(|v| v.trim().to_string())
+        .filter(|v| !v.is_empty())
 }
 
 fn load_storage() -> AppResult<StorageConfig> {
-    match getenv_opt("VL_STORAGE_BACKEND").unwrap_or_else(|| "local".to_string()).to_lowercase().as_str() {
+    match getenv_opt("VL_STORAGE_BACKEND")
+        .unwrap_or_else(|| "local".to_string())
+        .to_lowercase()
+        .as_str()
+    {
         "local" => {
-            let root = PathBuf::from(getenv_opt("VL_LOCAL_STORAGE_ROOT").unwrap_or_else(|| "./data/storage".to_string()));
-            let bucket = getenv_opt("VL_STORAGE_BUCKET").unwrap_or_else(|| "vaultlock-local".to_string());
+            let root = PathBuf::from(
+                getenv_opt("VL_LOCAL_STORAGE_ROOT").unwrap_or_else(|| "./data/storage".to_string()),
+            );
+            let bucket =
+                getenv_opt("VL_STORAGE_BUCKET").unwrap_or_else(|| "vaultlock-local".to_string());
             Ok(StorageConfig::Local { root, bucket })
         }
         "s3" => {
             let endpoint = getenv_req("VL_S3_ENDPOINT")?;
-            let region = getenv_opt("VL_S3_REGION")
-                .unwrap_or_else(|| "auto".to_string());
+            let region = getenv_opt("VL_S3_REGION").unwrap_or_else(|| "auto".to_string());
             let bucket = getenv_req("VL_STORAGE_BUCKET")?;
             let access_key_id = getenv_req("VL_S3_ACCESS_KEY_ID")?;
             let secret_access_key = getenv_req("VL_S3_SECRET_ACCESS_KEY")?;
@@ -194,7 +207,10 @@ fn load_storage() -> AppResult<StorageConfig> {
 fn load_kms() -> AppResult<KmsConfig> {
     let raw = getenv_req("VL_MASTER_KEY")?;
     let master_key = parse_master_key(&raw)?;
-    Ok(KmsConfig { master_key, external: getenv_opt("VL_KMS_EXTERNAL") })
+    Ok(KmsConfig {
+        master_key,
+        external: getenv_opt("VL_KMS_EXTERNAL"),
+    })
 }
 
 /// Accepts base64url, base64-standard or hex encoding of exactly 32 bytes.
@@ -203,7 +219,11 @@ fn parse_master_key(raw: &str) -> AppResult<[u8; 32]> {
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(trimmed)
         .ok()
-        .or_else(|| base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(trimmed).ok())
+        .or_else(|| {
+            base64::engine::general_purpose::URL_SAFE_NO_PAD
+                .decode(trimmed)
+                .ok()
+        })
         .or_else(|| hex::decode(trimmed).ok());
     match bytes {
         Some(v) if v.len() == 32 => {
@@ -248,10 +268,26 @@ fn load_identity() -> AppResult<IdentityConfig> {
     let github_oauth = oauth_pair("VL_OAUTH_GITHUB_CLIENT_ID", "VL_OAUTH_GITHUB_CLIENT_SECRET");
 
     Ok(IdentityConfig {
-        session_ttl: Duration::from_secs(u64::try_from(session_hours.max(1)).unwrap_or(168).saturating_mul(3600)),
-        email_token_ttl: Duration::from_secs(u64::try_from(email_minutes.max(1)).unwrap_or(60).saturating_mul(60)),
-        device_flow_ttl: Duration::from_secs(u64::try_from(flow_minutes.max(1)).unwrap_or(10).saturating_mul(60)),
-        personal_access_ttl: Duration::from_secs(u64::try_from(personal_hours.max(1)).unwrap_or(720).saturating_mul(3600)),
+        session_ttl: Duration::from_secs(
+            u64::try_from(session_hours.max(1))
+                .unwrap_or(168)
+                .saturating_mul(3600),
+        ),
+        email_token_ttl: Duration::from_secs(
+            u64::try_from(email_minutes.max(1))
+                .unwrap_or(60)
+                .saturating_mul(60),
+        ),
+        device_flow_ttl: Duration::from_secs(
+            u64::try_from(flow_minutes.max(1))
+                .unwrap_or(10)
+                .saturating_mul(60),
+        ),
+        personal_access_ttl: Duration::from_secs(
+            u64::try_from(personal_hours.max(1))
+                .unwrap_or(720)
+                .saturating_mul(3600),
+        ),
         google_oauth,
         github_oauth,
     })
