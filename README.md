@@ -47,4 +47,4 @@ Implementation is still ramping up. Contributor guidelines are in [`docs/CONTRIB
 
 ## License
 
-License to be determined before the first public release.
+Licensed under the [Apache License 2.0](LICENSE).

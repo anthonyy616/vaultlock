@@ -1,0 +1,7 @@
+[package]
+name = "vaultbox-organisations"
+version.workspace = true
+edition.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,7 @@
+[package]
+name = "vaultbox-common"
+version.workspace = true
+edition.workspace = true
+
+[lints]
+workspace = true

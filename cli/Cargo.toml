@@ -1,0 +1,15 @@
+[package]
+name = "vaultbox"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+
+[lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+panic = "warn"
+unwrap_used = "warn"
+expect_used = "warn"

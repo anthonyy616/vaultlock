@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend (Rust workspace)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+      - name: Format
+        run: cargo fmt --manifest-path backend/Cargo.toml --all -- --check
+      - name: Clippy
+        run: cargo clippy --manifest-path backend/Cargo.toml --workspace --all-targets --all-features -- -D warnings
+      - name: Tests
+        run: cargo test --manifest-path backend/Cargo.toml --workspace
+
+  cli:
+    name: CLI (Rust)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: cli
+      - name: Format
+        run: cargo fmt --manifest-path cli/Cargo.toml -- --check
+      - name: Clippy
+        run: cargo clippy --manifest-path cli/Cargo.toml --all-targets --all-features -- -D warnings
+      - name: Tests
+        run: cargo test --manifest-path cli/Cargo.toml
+
+  web:
+    name: Web (Next.js)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build
+        run: npm run build

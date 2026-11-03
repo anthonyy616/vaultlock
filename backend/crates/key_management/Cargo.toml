@@ -1,0 +1,7 @@
+[package]
+name = "vaultbox-key_management"
+version.workspace = true
+edition.workspace = true
+
+[lints]
+workspace = true
