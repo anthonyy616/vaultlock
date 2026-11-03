@@ -5,3 +5,11 @@ edition.workspace = true
 
 [lints]
 workspace = true
+
+[dependencies]
+vaultlock-common = { path = "../common" }
+serde_json.workspace = true
+sqlx.workspace = true
+time.workspace = true
+tracing.workspace = true
+uuid.workspace = true

@@ -5,3 +5,8 @@ edition.workspace = true
 
 [lints]
 workspace = true
+
+[dependencies]
+vaultlock-common = { path = "../common" }
+async-trait = "0.1"
+tracing.workspace = true

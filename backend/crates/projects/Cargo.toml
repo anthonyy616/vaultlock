@@ -5,3 +5,11 @@ edition.workspace = true
 
 [lints]
 workspace = true
+
+[dependencies]
+vaultlock-common = { path = "../common" }
+vaultlock-authorisation = { path = "../authorisation" }
+vaultlock-audit = { path = "../audit" }
+serde.workspace = true
+sqlx.workspace = true
+uuid.workspace = true

@@ -5,3 +5,21 @@ edition.workspace = true
 
 [lints]
 workspace = true
+
+[dependencies]
+vaultlock-common = { path = "../common" }
+vaultlock-audit = { path = "../audit" }
+vaultlock-encryption = { path = "../encryption" }
+aes-gcm.workspace = true
+async-trait = "0.1"
+base64.workspace = true
+rand.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+sqlx.workspace = true
+time.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+tokio.workspace = true
