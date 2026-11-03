@@ -1,0 +1,67 @@
+# Private internal workspace (design docs, agent notes, plans) — never publish
+agent/
+
+# macOS
+.DS_Store
+._*
+.AppleDouble
+.LSOverride
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Vaultbox local/CLI state (tokens, keys, caches, project linking)
+.vault/
+.vaultignore
+
+# Rust
+target/
+**/target/
+Cargo.lock.orig
+*.rs.bk
+release/
+dist/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+build/
+.turbo/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Testing and coverage
+coverage/
+.coverage
+htmlcov/
+.nyc_output/
+tarpaulin-report.html
+codecov/
+
+# Docker local development volumes
+docker-compose.override.yml
+.docker/
+
+# Logs, temp, editor state
+*.log
+logs/
+tmp/
+temp/
+*.swp
+.idea/
+.vscode/
+!.vscode/extensions.json
+
+# OS misc
+Thumbs.db
