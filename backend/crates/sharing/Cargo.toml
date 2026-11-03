@@ -1,5 +1,5 @@
 [package]
-name = "vaultbox-sharing"
+name = "vaultlock-sharing"
 version.workspace = true
 edition.workspace = true
 

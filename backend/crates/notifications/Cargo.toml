@@ -1,5 +1,5 @@
 [package]
-name = "vaultbox-notifications"
+name = "vaultlock-notifications"
 version.workspace = true
 edition.workspace = true
 

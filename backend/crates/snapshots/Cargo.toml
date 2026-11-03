@@ -1,5 +1,5 @@
 [package]
-name = "vaultbox-snapshots"
+name = "vaultlock-snapshots"
 version.workspace = true
 edition.workspace = true
 

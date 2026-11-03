@@ -1,5 +1,5 @@
 {
-  "name": "vaultbox-web",
+  "name": "vaultlock-web",
   "private": true,
   "scripts": {
     "dev": "next dev",

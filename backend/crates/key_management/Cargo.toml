@@ -1,5 +1,5 @@
 [package]
-name = "vaultbox-key_management"
+name = "vaultlock-key_management"
 version.workspace = true
 edition.workspace = true
 

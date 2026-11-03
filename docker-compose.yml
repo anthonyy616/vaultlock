@@ -5,31 +5,35 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-vaultbox}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vaultbox_dev}
-      POSTGRES_DB: ${POSTGRES_DB:-vaultbox}
+      POSTGRES_USER: ${POSTGRES_USER:-vaultlock}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vaultlock_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-vaultlock}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vaultbox} -d ${POSTGRES_DB:-vaultbox}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vaultlock} -d ${POSTGRES_DB:-vaultlock}"]
       interval: 5s
       timeout: 3s
       retries: 10
 
-  minio:
-    image: minio/minio:latest
+  seaweedfs:
+    # S3-compatible object storage for local development and self-hosting.
+    # (MinIO community images are no longer publicly pullable; DEC-018.)
+    # Cloudflare R2 and other providers use the same S3 API path.
+    image: chrislusf/seaweedfs:latest
     restart: unless-stopped
     ports:
-      - "${MINIO_API_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-vaultbox}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-vaultbox_dev_password}
+      - "${S3_API_PORT:-9000}:8333"
+      - "${S3_FILER_PORT:-8888}:8888"
+      - "${S3_MASTER_PORT:-9333}:9333"
     volumes:
-      - minio_data:/data
-    command: server /data --console-address ":9001"
+      - seaweed_data:/data
+      - ./infra/docker/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+    command: >-
+      server -dir=/data -ip=0.0.0.0 -master.volumeSizeLimitMB=10240
+      -filer -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD", "sh", "-c", "echo ok | wget -q -O- http://localhost:9333/cluster/status >/dev/null 2>&1"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -49,5 +53,5 @@ services:
 
 volumes:
   postgres_data:
-  minio_data:
+  seaweed_data:
   redis_data:

@@ -1,5 +1,5 @@
 [package]
-name = "vaultbox-devices"
+name = "vaultlock-devices"
 version.workspace = true
 edition.workspace = true
 

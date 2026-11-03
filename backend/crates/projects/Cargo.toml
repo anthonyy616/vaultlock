@@ -1,5 +1,5 @@
 [package]
-name = "vaultbox-projects"
+name = "vaultlock-projects"
 version.workspace = true
 edition.workspace = true
 

@@ -1,0 +1,14 @@
+{
+  "identities": [
+    {
+      "name": "vaultlock",
+      "actions": ["Read", "Write", "List", "Admin"],
+      "credentials": [
+        {
+          "accessKey": "vaultlock",
+          "secretKey": "vaultlock_dev_password"
+        }
+      ]
+    }
+  ]
+}

@@ -3,81 +3,81 @@
 version = 4
 
 [[package]]
-name = "vaultbox-api"
+name = "vaultlock-api"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-audit"
+name = "vaultlock-audit"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-authorisation"
+name = "vaultlock-authorisation"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-chunking"
+name = "vaultlock-chunking"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-common"
+name = "vaultlock-common"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-devices"
+name = "vaultlock-devices"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-encryption"
+name = "vaultlock-encryption"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-files"
+name = "vaultlock-files"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-identity"
+name = "vaultlock-identity"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-jobs"
+name = "vaultlock-jobs"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-key_management"
+name = "vaultlock-key_management"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-notifications"
+name = "vaultlock-notifications"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-organisations"
+name = "vaultlock-organisations"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-projects"
+name = "vaultlock-projects"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-secrets"
+name = "vaultlock-secrets"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-sharing"
+name = "vaultlock-sharing"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-snapshots"
+name = "vaultlock-snapshots"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-storage"
+name = "vaultlock-storage"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-test_support"
+name = "vaultlock-test_support"
 version = "0.1.0"
 
 [[package]]
-name = "vaultbox-vaults"
+name = "vaultlock-vaults"
 version = "0.1.0"

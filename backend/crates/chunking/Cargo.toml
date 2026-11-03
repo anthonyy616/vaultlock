@@ -1,5 +1,5 @@
 [package]
-name = "vaultbox-chunking"
+name = "vaultlock-chunking"
 version.workspace = true
 edition.workspace = true
 

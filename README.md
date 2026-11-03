@@ -16,7 +16,7 @@ Vaultbox solves this with:
 - **Secrets manager** — structured, encrypted secret sets per project and environment (`development` / `staging` / `production`), with safe `.env` import, masked UI, and audit logging.
 - **Team sharing** — users, organisations, workspaces, roles, and protected external links with expiry and revocation.
 - **A real CLI** — the primary interface: authenticate, link a project, preview a backup, restore on a new machine.
-- **Own your storage** — hosted vaultbox storage or your own S3-compatible bucket.
+- **Own your storage** — hosted vaultlock storage or your own S3-compatible bucket.
 
 ## Design principles
 

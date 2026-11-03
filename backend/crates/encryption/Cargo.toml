@@ -1,5 +1,5 @@
 [package]
-name = "vaultbox-encryption"
+name = "vaultlock-encryption"
 version.workspace = true
 edition.workspace = true
 
